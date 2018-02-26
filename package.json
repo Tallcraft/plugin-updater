@@ -4,7 +4,8 @@
   "description": "Bulk updates paper/spigot/bukkit plugins",
   "main": "index.js",
   "scripts": {
-    "start": "babel src -d build -s && node build/index.js"
+    "start": "node build/index.js",
+    "prestart": "script/build"
   },
   "author": "Paul Zühlcke",
   "license": "MIT",
@@ -16,6 +17,7 @@
     "eslint-plugin-import": "^2.9.0"
   },
   "dependencies": {
-    "chalk": "^2.3.1"
+    "chalk": "^2.3.1",
+    "yargs": "^11.0.0"
   }
 }

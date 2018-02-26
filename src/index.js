@@ -1,4 +1,5 @@
 import chalk from 'chalk';
+import yargs from 'yargs';
 
 console.log(chalk.green('Hello, World!'));
 
@@ -16,3 +17,7 @@ console.log(chalk.green('Hello, World!'));
     Strip build numbers and other metadata in plugin file name.
       E.g. EssentialsX-3.4.5.jar => EssentialsX.jar
  */
+
+
+// TODO Set up app arguments using yargs
+
