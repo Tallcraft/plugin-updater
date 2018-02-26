@@ -23,29 +23,50 @@ export default {
 
       // Fill server/plugin path arrays for update tasks
 
-      Promise.all([
-        new Promise((res, rej) => {
-          if (argv.server) {
-            return res([argv.server]);
-          }
-          return this.getPaths('server', argv.serverDir)
-            .catch(rej)
-            .then(s => res(s));
-        }),
+      const pathTasks = [];
 
-        new Promise((res, rej) => {
-          if (argv.plugin) {
-            return res([argv.plugin]);
-          }
-          return this.getPaths('plugin', argv.pluginDir)
-            .catch(rej)
-            .then(p => res(p));
-        })])
+      if (argv.server) {
+        // Single server
+        pathTasks.push(this.checkPath('server', argv.server));
+      } else {
+        // Multiple servers
+        pathTasks.push(this.getPaths('server', argv.serverDir));
+      }
+
+      if (argv.plugin) {
+        // Single plugin
+        pathTasks.push(this.checkPath('plugin', argv.plugin));
+      } else {
+        // Multiple plugins
+        pathTasks.push(this.getPaths('plugin', argv.pluginDir));
+      }
+
+      Promise.all(pathTasks)
         .catch((error) => {
           log.error(error);
           return reject(new Error('Error while processing server / plugin path'));
         })
-        .then(([servers, plugins]) => {
+        .then(([s, p]) => {
+          global.DEBUG && log.debug('Returned servers, plugins', s, p);
+          let servers = s;
+          let plugins = p;
+
+          // Tasks can return single item instead of array or undefined (this.checkPath)
+          //  convert if needed
+          if (!s) {
+            servers = [];
+          } else if (!Array.isArray(s)) {
+            servers = [s];
+          }
+          if (!p) {
+            plugins = [];
+          } else if (!Array.isArray(p)) {
+            plugins = [p];
+          }
+
+          global.DEBUG && log.debug('Converted servers, plugins', servers, plugins);
+
+
           if (servers.length === 0) {
             return reject(new Error('No Server/s found. Check your server argument.'));
           }
@@ -190,6 +211,7 @@ export default {
             .then((isPlugin) => {
               if (isPlugin) {
                 // resolve with valid plugin path
+                global.DEBUG && log.debug('Is plugin file');
                 resolve(p);
               } else {
                 global.DEBUG && log.debug('Is no plugin file');
@@ -255,7 +277,7 @@ export default {
     return new Promise((resolve) => {
       const cleanDir = path.join(...p);
       global.DEBUG && log.debug('Checking dir', cleanDir);
-      fs.access(cleanDir, fs.constants.F_OK, err => resolve(!err));
+      fs.access(cleanDir, fs.constants.F_OK, err => resolve(!(err && err.code === 'ENOENT')));
     });
   },
 };

@@ -84,5 +84,5 @@ updater.run(argv)
   })
   .catch((error) => {
     log.error(chalk.bold.red('Updater finished with errors.'));
-    log.error(error);
+    log.error(chalk.red(error));
   });
