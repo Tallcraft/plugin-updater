@@ -14,7 +14,7 @@ export default {
    * @param argv - User arguments
    */
   run(argv) {
-    return new Promise((resolve) => {
+    return new Promise((resolve, reject) => {
       log.debug('Running updater with args', argv);
 
       // Fill server/plugin path arrays for update tasks
@@ -39,13 +39,11 @@ export default {
 
         .then(([servers, plugins]) => {
           if (servers.length === 0) {
-            log.error(chalk.red('No Server/s found. Check your server argument.'));
-            return resolve();
+            return reject(new Error('No Server/s found. Check your server argument.'));
           }
 
           if (plugins.length === 0) {
-            log.error(chalk.red('No Plugin/s found. Check your plugin argument.'));
-            return resolve();
+            return reject(new Error('No Plugin/s found. Check your plugin argument.'));
           }
 
           // Arrays filled, call update method for every plugin / server dir
@@ -56,7 +54,7 @@ export default {
 
           plugins.forEach((pluginPath) => {
             servers.forEach((serverPath) => {
-              updatePromises.push(this.updatePlugin(serverPath, pluginPath));
+              updatePromises.push(this.updatePlugin(serverPath, pluginPath, argv.simulate));
             });
           });
 
@@ -65,9 +63,9 @@ export default {
         });
     });
   },
-  updatePlugin(serverPath, pluginPath) {
+  updatePlugin(serverPath, pluginPath, simulate = false) {
     return new Promise((resolve) => {
-      log.debug('updatePlugin', serverPath, pluginPath);
+      log.debug('updatePlugin', serverPath, pluginPath, simulate);
       // TODO: Start file operations
 
       this.pluginInstalled(serverPath, path.basename(pluginPath))

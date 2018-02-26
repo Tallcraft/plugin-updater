@@ -53,6 +53,11 @@ const argv = yargs
     describe: 'Plugin update folder name (in server plugin directory)',
     type: 'string',
   })
+  .option('simulate', {
+    default: false,
+    describe: 'Only print copy operations, do not execute.',
+    type: Boolean,
+  })
   .alias('help', 'h')
   .epilog('Created by Paul Zühlcke - pbz.im')
   .check((a) => {
@@ -77,6 +82,10 @@ const argv = yargs
 // Start updater with user args
 
 log.info(chalk.green('Ready!'));
-updater.run(argv).then(() => {
-  log.info(chalk.bold.green('Updater finished'));
-});
+updater.run(argv)
+  .then(() => {
+    log.info(chalk.bold.green('Updater finished successfully.'));
+  })
+  .catch((error) => {
+    log.error(chalk.bold.red('Updater finished with errors.'), error);
+  });
