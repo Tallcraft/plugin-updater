@@ -4,6 +4,9 @@ const log = console;
 const fs = require('fs');
 const path = require('path');
 
+// File ending to validate / detect plugin files
+const pluginFileEnding = '.jar';
+
 
 export default {
   /**
@@ -11,47 +14,56 @@ export default {
    * @param argv - User arguments
    */
   run(argv) {
-    log.debug('Running updater with args', argv);
+    return new Promise((resolve) => {
+      log.debug('Running updater with args', argv);
 
+      // Fill server/plugin path arrays for update tasks
 
-    // Fill arrays
+      Promise.all([
 
-    Promise.all([
+        new Promise((res) => {
+          if (argv.server) {
+            return res([argv.server]);
+          }
+          this.getPaths('server', argv.serverDir)
+            .then(s => res(s));
+        }),
 
-      new Promise((resolve) => {
-        if (argv.server) {
-          return resolve([argv.server]);
-        }
-        this.getPaths('server', argv.serverDir)
-          .then(s => resolve(s));
-      }),
+        new Promise((res) => {
+          if (argv.plugin) {
+            return res([argv.plugin]);
+          }
+          this.getPaths('plugin', argv.pluginDir)
+            .then(p => res(p));
+        })])
 
-      new Promise((resolve) => {
-        if (argv.plugin) {
-          return resolve([argv.plugin]);
-        }
-        this.getPaths('plugin', argv.pluginDir)
-          .then(p => resolve(p));
-      })])
+        .then(([servers, plugins]) => {
+          if (servers.length === 0) {
+            log.error(chalk.red('No Server/s found. Check your server argument.'));
+            return resolve();
+          }
 
-      .then(([servers, plugins]) => {
-      // Arrays filled, call update method for every plugin / server dir
-        log.info(chalk.bold('Servers'), servers);
-        log.info(chalk.bold('Plugins'), plugins);
+          if (plugins.length === 0) {
+            log.error(chalk.red('No Plugin/s found. Check your plugin argument.'));
+            return resolve();
+          }
 
-        const updatePromises = [];
+          // Arrays filled, call update method for every plugin / server dir
+          log.info(chalk.bold('Servers'), servers);
+          log.info(chalk.bold('Plugins'), plugins);
 
-        plugins.forEach((pluginPath) => {
-          servers.forEach((serverPath) => {
-            updatePromises.push(this.updatePlugin(serverPath, pluginPath));
+          const updatePromises = [];
+
+          plugins.forEach((pluginPath) => {
+            servers.forEach((serverPath) => {
+              updatePromises.push(this.updatePlugin(serverPath, pluginPath));
+            });
           });
+
+          Promise.all(updatePromises)
+            .then(resolve);
         });
-
-        Promise.all(updatePromises)
-          .then(() => {
-            log.info(chalk.bold.green('Update done'));
-          });
-      });
+    });
   },
   updatePlugin(serverPath, pluginPath) {
     return new Promise((resolve) => {
@@ -152,7 +164,8 @@ export default {
    */
   pluginInstalled(serverPath, pluginName) {
     log.debug('pluginInstalled', pluginName, serverPath);
-    const pluginFile = pluginName.endsWith('.jar') ? pluginName : `${pluginName}.jar`;
+    const pluginFile = pluginName.endsWith(pluginFileEnding)
+      ? pluginName : `pluginName${pluginFileEnding}`;
     return this.pathExists(serverPath, 'plugins', pluginFile);
   },
   /**
@@ -176,7 +189,7 @@ export default {
     return new Promise((resolve) => {
       // Plugins must have file ending jar
       log.debug('Checking file extension', pluginPath);
-      if (path.extname(pluginPath) !== '.jar') {
+      if (path.extname(pluginPath) !== pluginFileEnding) {
         log.debug('Invalid plugin file extension');
         return resolve(false);
       }
