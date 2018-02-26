@@ -83,7 +83,9 @@ export default {
     return new Promise((resolve) => {
       log.debug('updatePlugin', serverPath, pluginPath, simulate);
 
-      this.pluginInstalled(serverPath, path.basename(pluginPath))
+      const pluginFileName = path.basename(pluginPath);
+
+      this.pluginInstalled(serverPath, pluginFileName)
         .then((isInstalled) => {
           if (!isInstalled) {
             log.debug('Plugin is not installed. Abort');
@@ -94,7 +96,7 @@ export default {
           // Copy file
 
           const src = pluginPath;
-          const dst = path.join(serverPath, 'plugins', 'update');
+          const dst = path.join(serverPath, 'plugins', 'update', pluginFileName);
           const copyMsg = `${src} ===> ${dst}`;
 
           if (simulate) {

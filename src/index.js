@@ -76,7 +76,7 @@ const argv = yargs
 
 // Start updater with user args
 
-log.info(chalk.green('Starting updater!'));
+log.info(chalk.bold.green('Starting updater.'));
 updater.run(argv)
   .then(() => {
     log.info(chalk.bold.green('Updater finished successfully.'));
