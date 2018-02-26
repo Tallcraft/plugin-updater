@@ -1,6 +1,8 @@
 import chalk from 'chalk';
 import yargs from 'yargs';
 
+import updater from './updater';
+
 const logger = console;
 
 // TODO
@@ -16,10 +18,13 @@ const logger = console;
     Flag for resetting plugin config folder and / or config.yml
     Strip build numbers and other metadata in plugin file name.
       E.g. EssentialsX-3.4.5.jar => EssentialsX.jar
+    Update mode: either copy to update folder or rename old jar to e.g. .old and place new jar
+      directly in plugin folder
+    Download plugin via url, then distribute
  */
 
 
-// TODO Set up app arguments using yargs
+// Setup app arguments using yargs
 
 const argv = yargs
   .usage('$0 -p [plugin(-dir)] -s [server-dir]')
@@ -43,9 +48,19 @@ const argv = yargs
     describe: 'Directory holding server directories',
     type: 'string',
   })
+  .option('update-folder', {
+    default: 'update',
+    describe: 'Plugin update folder name (in server plugin directory)',
+    type: 'string',
+  })
   .alias('help', 'h')
   .epilog('Created by Paul Zühlcke - pbz.im')
   .check((a) => {
+    // TODO: server-dir, plugin-dir
+    // if (a.serverDir || a.pluginDir) {
+    //   throw new Error('Bulk operations not yet supported. Aborting.');
+    // }
+
     // Check if we have at least one of the server and one of the plugin path options
     if (!(a.server || a.serverDir)) {
       throw new Error('Missing server path. Provide either --server or --server-dir.');
@@ -59,4 +74,7 @@ const argv = yargs
   })
   .argv;
 
+// Start updater with user args
+
 logger.info(chalk.green('Ready!'));
+updater.run(argv);
