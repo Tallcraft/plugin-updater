@@ -82,16 +82,32 @@ export default {
   updatePlugin(serverPath, pluginPath, simulate = false) {
     return new Promise((resolve) => {
       log.debug('updatePlugin', serverPath, pluginPath, simulate);
-      // TODO: Start file operations
 
       this.pluginInstalled(serverPath, path.basename(pluginPath))
         .then((isInstalled) => {
-          if (isInstalled) {
-            log.debug('Plugin is installed');
-          } else {
-            log.debug('Plugin is not installed');
+          if (!isInstalled) {
+            log.debug('Plugin is not installed. Abort');
+            return resolve();
           }
-          resolve();
+          log.debug('Plugin is installed. Update');
+
+          // Copy file
+
+          const src = pluginPath;
+          const dst = path.join(serverPath, 'plugins', 'update');
+          const copyMsg = `${src} ===> ${dst}`;
+
+          if (simulate) {
+            log.info(chalk.italic.blue(`(SIMULATED) ${copyMsg}`));
+            return resolve();
+          }
+          fs.copyFile(src, dst, undefined, (err) => {
+            if (err) {
+              log.error('Error while copying file', src, dst, err);
+            }
+            log.info(chalk.italic.yellow(copyMsg));
+            return resolve();
+          });
         });
     });
   },
