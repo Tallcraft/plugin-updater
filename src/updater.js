@@ -15,7 +15,7 @@ export default {
    */
   run(argv) {
     return new Promise((resolve, reject) => {
-      log.debug('Running updater with args', argv);
+      global.DEBUG && log.debug('Running updater with args', argv);
 
       if (argv.simulate) {
         log.info(chalk.bold.blue('Simulation: All copy operations will be printed only'));
@@ -55,11 +55,15 @@ export default {
           }
 
           // Arrays filled, call update method for every plugin / server dir
-          log.info(chalk.bold('Servers'), servers);
-          log.info(chalk.bold('Plugins'), plugins);
+          log.info(chalk.blue.bold('Servers'));
+          this.printList(servers);
+
+          log.info(chalk.blue.bold('Plugins'));
+          this.printList(plugins);
 
           const updatePromises = [];
 
+          log.info(chalk.yellow.bold('Update'));
           plugins.forEach((pluginPath) => {
             servers.forEach((serverPath) => {
               updatePromises.push(this.updatePlugin(serverPath, pluginPath, argv.simulate));
@@ -72,6 +76,11 @@ export default {
         });
     });
   },
+  printList(arr) {
+    arr.forEach((e) => {
+      log.info(chalk.blue(`- ${e}`));
+    });
+  },
   /**
    * Copy plugin to update folder of server
    * @param {String} serverPath - Path to server folder
@@ -81,17 +90,17 @@ export default {
    */
   updatePlugin(serverPath, pluginPath, simulate = false) {
     return new Promise((resolve) => {
-      log.debug('updatePlugin', serverPath, pluginPath, simulate);
+      global.DEBUG && log.debug('updatePlugin', serverPath, pluginPath, simulate);
 
       const pluginFileName = path.basename(pluginPath);
 
       this.pluginInstalled(serverPath, pluginFileName)
         .then((isInstalled) => {
           if (!isInstalled) {
-            log.debug('Plugin is not installed. Abort');
+            global.DEBUG && log.debug('Plugin is not installed. Abort');
             return resolve();
           }
-          log.debug('Plugin is installed. Update');
+          global.DEBUG && log.debug('Plugin is installed. Update');
 
           // Copy file
 
@@ -121,12 +130,12 @@ export default {
    */
   getPaths(mode, baseDir) {
     return new Promise((resolve, reject) => {
-      log.debug('getPaths', mode);
+      global.DEBUG && log.debug('getPaths', mode);
       fs.readdir(baseDir, undefined, (error, files) => {
         if (error) {
           return reject(error);
         }
-        log.debug('Directory contents', files);
+        global.DEBUG && log.debug('Directory contents', files);
 
         const checkPromises = [];
 
@@ -141,7 +150,7 @@ export default {
           .then((paths) => {
             // Remove undefined fields (invalid paths)
             const cleanPaths = paths.filter(p => p);
-            log.debug('paths', cleanPaths);
+            global.DEBUG && log.debug('paths', cleanPaths);
             resolve(cleanPaths);
           });
       });
@@ -155,40 +164,40 @@ export default {
    */
   checkPath(mode, p) {
     return new Promise((resolve) => {
-      log.debug('checkPath', mode, p);
+      global.DEBUG && log.debug('checkPath', mode, p);
       fs.stat(p, (err, stat) => {
         if (err) {
-          log.debug('Error while getting file stats for file, skipping', p);
-          log.debug(err);
+          global.DEBUG && log.debug('Error while getting file stats for file, skipping', p);
+          global.DEBUG && log.debug(err);
           resolve();
         } else if (mode === 'server' && stat.isDirectory()) {
-          log.debug('Is directory', p);
+          global.DEBUG && log.debug('Is directory', p);
           // Check if directory is valid server directory
           this.isServerDir(p)
             .then((isServer) => {
               if (isServer) {
                 // resolve with valid server path
-                log.debug('is server directory');
+                global.DEBUG && log.debug('is server directory');
                 resolve(p);
               } else {
-                log.debug('Is no server directory');
+                global.DEBUG && log.debug('Is no server directory');
                 resolve();
               }
             });
         } else if (mode === 'plugin' && stat.isFile()) {
-          log.debug('Is file', p);
+          global.DEBUG && log.debug('Is file', p);
           this.isPluginFile(p)
             .then((isPlugin) => {
               if (isPlugin) {
                 // resolve with valid plugin path
                 resolve(p);
               } else {
-                log.debug('Is no plugin file');
+                global.DEBUG && log.debug('Is no plugin file');
                 resolve();
               }
             });
         } else {
-          log.debug('Skipping out of scope file', p);
+          global.DEBUG && log.debug('Skipping out of scope file', p);
           resolve();
         }
       });
@@ -201,7 +210,7 @@ export default {
    * @returns {Promise<Boolean>} - true if plugin is present, false otherwise
    */
   pluginInstalled(serverPath, pluginName) {
-    log.debug('pluginInstalled', pluginName, serverPath);
+    global.DEBUG && log.debug('pluginInstalled', pluginName, serverPath);
     const pluginFile = pluginName.endsWith(pluginFileEnding)
       ? pluginName : `pluginName${pluginFileEnding}`;
     return this.pathExists(serverPath, 'plugins', pluginFile);
@@ -213,7 +222,7 @@ export default {
    * @returns {Promise<Boolean>} true if directory is server, false otherwise
    */
   isServerDir(serverPath) {
-    log.debug('isServerDir', serverPath);
+    global.DEBUG && log.debug('isServerDir', serverPath);
     return this.pathExists(serverPath, 'plugins');
   },
   /**
@@ -223,12 +232,12 @@ export default {
    * @returns {Promise<Boolean>} true if file is plugin and exists, false otherwise
    */
   isPluginFile(pluginPath) {
-    log.debug('isPluginFile', pluginPath);
+    global.DEBUG && log.debug('isPluginFile', pluginPath);
     return new Promise((resolve) => {
       // Plugins must have file ending jar
-      log.debug('Checking file extension', pluginPath);
+      global.DEBUG && log.debug('Checking file extension', pluginPath);
       if (path.extname(pluginPath) !== pluginFileEnding) {
-        log.debug('Invalid plugin file extension');
+        global.DEBUG && log.debug('Invalid plugin file extension');
         return resolve(false);
       }
       // Extension valid
@@ -242,10 +251,10 @@ export default {
    * @returns {Promise<any>} true if directory / file exists, false otherwise
    */
   pathExists(...p) {
-    log.debug('pathExists', p);
+    global.DEBUG && log.debug('pathExists', p);
     return new Promise((resolve) => {
       const cleanDir = path.join(...p);
-      log.debug('Checking dir', cleanDir);
+      global.DEBUG && log.debug('Checking dir', cleanDir);
       fs.access(cleanDir, fs.constants.F_OK, err => resolve(!err));
     });
   },

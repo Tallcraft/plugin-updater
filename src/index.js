@@ -3,6 +3,7 @@ import yargs from 'yargs';
 
 import updater from './updater';
 
+global.DEBUG = true;
 const log = console;
 
 // TODO
@@ -76,10 +77,10 @@ const argv = yargs
 
 // Start updater with user args
 
-log.info(chalk.bold.green('Starting updater.'));
+log.info(chalk.bold.underline.green('Starting updater.'));
 updater.run(argv)
   .then(() => {
-    log.info(chalk.bold.green('Updater finished successfully.'));
+    log.info(chalk.bold.underline.green('Updater finished successfully.'));
   })
   .catch((error) => {
     log.error(chalk.bold.red('Updater finished with errors.'));
