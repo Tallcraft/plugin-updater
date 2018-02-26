@@ -40,7 +40,7 @@ const argv = yargs
   })
   .option('plugin-dir', {
     alias: 'P',
-    describe: 'Directory of with plugin files.',
+    describe: 'Directory with plugin files.',
     type: 'string',
   })
   .option('server-dir', {
@@ -61,11 +61,6 @@ const argv = yargs
   .alias('help', 'h')
   .epilog('Created by Paul Zühlcke - pbz.im')
   .check((a) => {
-    // TODO: server-dir, plugin-dir
-    // if (a.serverDir || a.pluginDir) {
-    //   throw new Error('Bulk operations not yet supported. Aborting.');
-    // }
-
     // Check if we have at least one of the server and one of the plugin path options
     if (!(a.server || a.serverDir)) {
       throw new Error('Missing server path. Provide either --server or --server-dir.');
@@ -81,11 +76,12 @@ const argv = yargs
 
 // Start updater with user args
 
-log.info(chalk.green('Ready!'));
+log.info(chalk.green('Starting updater!'));
 updater.run(argv)
   .then(() => {
     log.info(chalk.bold.green('Updater finished successfully.'));
   })
   .catch((error) => {
-    log.error(chalk.bold.red('Updater finished with errors.'), error);
+    log.error(chalk.bold.red('Updater finished with errors.'));
+    log.error(error);
   });

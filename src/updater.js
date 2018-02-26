@@ -17,26 +17,34 @@ export default {
     return new Promise((resolve, reject) => {
       log.debug('Running updater with args', argv);
 
+      if (argv.simulate) {
+        log.info(chalk.bold.blue('Simulation: All copy operations will be printed only'));
+      }
+
       // Fill server/plugin path arrays for update tasks
 
       Promise.all([
-
-        new Promise((res) => {
+        new Promise((res, rej) => {
           if (argv.server) {
             return res([argv.server]);
           }
-          this.getPaths('server', argv.serverDir)
+          return this.getPaths('server', argv.serverDir)
+            .catch(rej)
             .then(s => res(s));
         }),
 
-        new Promise((res) => {
+        new Promise((res, rej) => {
           if (argv.plugin) {
             return res([argv.plugin]);
           }
-          this.getPaths('plugin', argv.pluginDir)
+          return this.getPaths('plugin', argv.pluginDir)
+            .catch(rej)
             .then(p => res(p));
         })])
-
+        .catch((error) => {
+          log.error(error);
+          return reject(new Error('Error while processing server / plugin path'));
+        })
         .then(([servers, plugins]) => {
           if (servers.length === 0) {
             return reject(new Error('No Server/s found. Check your server argument.'));
@@ -58,11 +66,19 @@ export default {
             });
           });
 
-          Promise.all(updatePromises)
+          // Once all update operations are done resolve
+          return Promise.all(updatePromises)
             .then(resolve);
         });
     });
   },
+  /**
+   * Copy plugin to update folder of server
+   * @param {String} serverPath - Path to server folder
+   * @param {String} pluginPath - Path to plugin file
+   * @param {Boolean} simulate - Only print copy operations, do not run
+   * @returns {Promise} - Resolves when operation has finished
+   */
   updatePlugin(serverPath, pluginPath, simulate = false) {
     return new Promise((resolve) => {
       log.debug('updatePlugin', serverPath, pluginPath, simulate);
@@ -79,6 +95,12 @@ export default {
         });
     });
   },
+  /**
+   * Given either a directory of plugins or a directory of servers
+   * @param {String} mode - Either 'server' or 'plugin'
+   * @param {String} baseDir - Path to directory to search in
+   * @returns {Promise<Array>} - Array of paths to plugins or servers
+   */
   getPaths(mode, baseDir) {
     return new Promise((resolve, reject) => {
       log.debug('getPaths', mode);
