@@ -28,7 +28,7 @@ const log = console;
 // Setup app arguments using yargs
 
 const argv = yargs
-  .usage('$0 -p [plugin(-dir)] -s [server-dir]')
+  .usage('$0 [-p plugin] [-s server] [-P plugin-dir] [-S server-dir]')
   .option('plugin', {
     alias: 'p',
     describe: 'Plugin file',
