@@ -8,11 +8,9 @@ const log = console;
 
 // TODO
 /*
-  Specs
-    Single file or directory with jar plugin files to update
-    Destination servers either all in subdir or list of paths
-    Validate if folder contains server
-    Copy new plugins to <server>/plugins/update (Create folder if not existing)
+  Create Update folder if it doesnt exist
+  Improve error handling
+  Code Cleanup
 
   Nice to have
     Extract version information from plugins and warn / abort if plugin is newer / up to date
