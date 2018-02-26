@@ -1,0 +1,21 @@
+{
+  "name": "plugin-updater",
+  "version": "1.0.0",
+  "description": "Bulk updates paper/spigot/bukkit plugins",
+  "main": "index.js",
+  "scripts": {
+    "start": "babel src -d build -s && node build/index.js"
+  },
+  "author": "Paul Zühlcke",
+  "license": "MIT",
+  "devDependencies": {
+    "babel-cli": "^6.26.0",
+    "babel-preset-env": "^1.6.1",
+    "eslint": "^4.18.1",
+    "eslint-config-airbnb-base": "^12.1.0",
+    "eslint-plugin-import": "^2.9.0"
+  },
+  "dependencies": {
+    "chalk": "^2.3.1"
+  }
+}
