@@ -1,7 +1,7 @@
 import chalk from 'chalk';
 import yargs from 'yargs';
 
-console.log(chalk.green('Hello, World!'));
+const logger = console;
 
 // TODO
 /*
@@ -21,3 +21,42 @@ console.log(chalk.green('Hello, World!'));
 
 // TODO Set up app arguments using yargs
 
+const argv = yargs
+  .usage('$0 -p [plugin(-dir)] -s [server-dir]')
+  .option('plugin', {
+    alias: 'p',
+    describe: 'Plugin file',
+    type: 'string',
+  })
+  .option('server', {
+    alias: 's',
+    describe: 'Server directory',
+    type: 'string',
+  })
+  .option('plugin-dir', {
+    alias: 'P',
+    describe: 'Directory of with plugin files.',
+    type: 'string',
+  })
+  .option('server-dir', {
+    alias: 'S',
+    describe: 'Directory holding server directories',
+    type: 'string',
+  })
+  .alias('help', 'h')
+  .epilog('Created by Paul Zühlcke - pbz.im')
+  .check((a) => {
+    // Check if we have at least one of the server and one of the plugin path options
+    if (!(a.server || a.serverDir)) {
+      throw new Error('Missing server path. Provide either --server or --server-dir.');
+    }
+
+    if (!(a.plugin || a.pluginDir)) {
+      throw new Error('Missing plugin path. Provide either --plugin or --plugin-dir');
+    }
+
+    return true;
+  })
+  .argv;
+
+logger.info(chalk.green('Ready!'));
