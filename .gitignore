@@ -144,3 +144,6 @@ crashlytics.properties
 crashlytics-build.properties
 fabric.properties
 
+# Babel build dir
+build/
+
