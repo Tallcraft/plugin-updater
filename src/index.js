@@ -3,7 +3,7 @@ import yargs from 'yargs';
 
 import updater from './updater';
 
-global.DEBUG = true;
+global.DEBUG = false;
 const log = console;
 
 // TODO
