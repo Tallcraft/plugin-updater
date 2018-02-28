@@ -46,9 +46,6 @@ function runUpdater(argv) {
 function runPluginInfo(argv) {
   // Start pluginInfo tool with user args
   pluginInfo.getPluginInfo(argv.plugin)
-    .catch((err) => {
-      log.error(chalk.bold.red('An error occured'), err);
-    })
     .then((info) => {
       if (argv.ver) {
         // only show version number
@@ -56,6 +53,9 @@ function runPluginInfo(argv) {
       } else {
         log.info(log.info(chalk.bold.green('Plugin Info:'), info));
       }
+    })
+    .catch((err) => {
+      log.error(chalk.bold.red('An error occured'), err);
     });
 }
 
