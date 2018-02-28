@@ -1,7 +1,9 @@
 import chalk from 'chalk';
+import loglevel from 'loglevel';
+
 import pluginInfo from './pluginInfo';
 
-const log = console;
+const log = loglevel.getLogger('update');
 const fs = require('fs');
 const path = require('path');
 
@@ -13,7 +15,7 @@ export default {
    */
   run(argv) {
     return new Promise((resolve, reject) => {
-      global.DEBUG && log.debug('Running updater with args', argv);
+      log.debug('Running updater with args', argv);
 
       if (argv.simulate) {
         log.info(chalk.bold.blue('Simulation: All copy operations will be printed only'));
@@ -41,7 +43,7 @@ export default {
 
       Promise.all(pathTasks)
         .then(([s, p]) => {
-          global.DEBUG && log.debug('Returned servers, plugins', s, p);
+          log.debug('Returned servers, plugins', s, p);
           let servers = s;
           let plugins = p;
 
@@ -58,7 +60,7 @@ export default {
             plugins = [p];
           }
 
-          global.DEBUG && log.debug('Converted servers, plugins', servers, plugins);
+          log.debug('Converted servers, plugins', servers, plugins);
 
 
           if (servers.length === 0) {
@@ -109,7 +111,7 @@ export default {
    */
   updatePlugin(serverPath, pluginPath, simulate = false) {
     return new Promise((resolve) => {
-      global.DEBUG && log.debug('updatePlugin', serverPath, pluginPath, simulate);
+      log.debug('updatePlugin', serverPath, pluginPath, simulate);
 
       const pluginFileName = path.basename(pluginPath);
 
@@ -117,10 +119,10 @@ export default {
         .then((isInstalled) => {
           if (!isInstalled) {
             log.info(chalk.yellow(`Not installed: Skipping ${pluginFileName} for server ${path.basename(serverPath)}.`));
-            global.DEBUG && log.debug('Plugin is not installed. Abort');
+            log.debug('Plugin is not installed. Abort');
             return resolve();
           }
-          global.DEBUG && log.debug('Plugin is installed. Update');
+          log.debug('Plugin is installed. Update');
 
           // Copy file
 
@@ -150,12 +152,12 @@ export default {
    */
   getPaths(mode, baseDir) {
     return new Promise((resolve, reject) => {
-      global.DEBUG && log.debug('getPaths', mode);
+      log.debug('getPaths', mode);
       fs.readdir(baseDir, undefined, (error, files) => {
         if (error) {
           return reject(error);
         }
-        global.DEBUG && log.debug('Directory contents', files);
+        log.debug('Directory contents', files);
 
         const checkPromises = [];
 
@@ -170,7 +172,7 @@ export default {
           .then((paths) => {
             // Remove undefined fields (invalid paths)
             const cleanPaths = paths.filter(p => p);
-            global.DEBUG && log.debug('paths', cleanPaths);
+            log.debug('paths', cleanPaths);
             resolve(cleanPaths);
           });
       });
@@ -184,41 +186,41 @@ export default {
    */
   checkPath(mode, p) {
     return new Promise((resolve) => {
-      global.DEBUG && log.debug('checkPath', mode, p);
+      log.debug('checkPath', mode, p);
       fs.stat(p, (err, stat) => {
         if (err) {
-          global.DEBUG && log.debug('Error while getting file stats for file, skipping', p);
-          global.DEBUG && log.debug(err);
+          log.debug('Error while getting file stats for file, skipping', p);
+          log.debug(err);
           resolve();
         } else if (mode === 'server' && stat.isDirectory()) {
-          global.DEBUG && log.debug('Is directory', p);
+          log.debug('Is directory', p);
           // Check if directory is valid server directory
           this.isServerDir(p)
             .then((isServer) => {
               if (isServer) {
                 // resolve with valid server path
-                global.DEBUG && log.debug('is server directory');
+                log.debug('is server directory');
                 resolve(p);
               } else {
-                global.DEBUG && log.debug('Is no server directory');
+                log.debug('Is no server directory');
                 resolve();
               }
             });
         } else if (mode === 'plugin' && stat.isFile()) {
-          global.DEBUG && log.debug('Is file', p);
+          log.debug('Is file', p);
           pluginInfo.isPluginFile(p)
             .then((isPlugin) => {
               if (isPlugin) {
                 // resolve with valid plugin path
-                global.DEBUG && log.debug('Is plugin file');
+                log.debug('Is plugin file');
                 resolve(p);
               } else {
-                global.DEBUG && log.debug('Is no plugin file');
+                log.debug('Is no plugin file');
                 resolve();
               }
             });
         } else {
-          global.DEBUG && log.debug('Skipping out of scope file', p);
+          log.debug('Skipping out of scope file', p);
           resolve();
         }
       });
@@ -231,7 +233,7 @@ export default {
    * @returns {Promise<Boolean>} - true if plugin is present, false otherwise
    */
   pluginInstalled(serverPath, pluginName) {
-    global.DEBUG && log.debug('pluginInstalled', pluginName, serverPath);
+    log.debug('pluginInstalled', pluginName, serverPath);
     const pluginFile = pluginName.endsWith(global.pluginFileEnding)
       ? pluginName : `pluginName${global.pluginFileEnding}`;
     return this.pathExists(serverPath, 'plugins', pluginFile);
@@ -243,7 +245,7 @@ export default {
    * @returns {Promise<Boolean>} true if directory is server, false otherwise
    */
   isServerDir(serverPath) {
-    global.DEBUG && log.debug('isServerDir', serverPath);
+    log.debug('isServerDir', serverPath);
     return this.pathExists(serverPath, 'plugins');
   },
   /**
@@ -253,9 +255,9 @@ export default {
    */
   pathExists(...p) {
     return new Promise((resolve) => {
-      global.DEBUG && log.debug('pathExists', p);
+      log.debug('pathExists', p);
       const cleanDir = path.join(...p);
-      global.DEBUG && log.debug('Checking dir', cleanDir);
+      log.debug('Checking dir', cleanDir);
       fs.access(cleanDir, fs.constants.F_OK, err => resolve(!(err && err.code === 'ENOENT')));
     });
   },

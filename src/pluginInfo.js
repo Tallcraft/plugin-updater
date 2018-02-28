@@ -1,12 +1,12 @@
 import yauzl from 'yauzl';
 import jsYAML from 'js-yaml';
+import loglevel from 'loglevel';
 
 import updater from './updater';
 
 const path = require('path');
 
-const log = console;
-
+const log = loglevel.getLogger('info');
 
 const pluginInfo = {
   /**
@@ -34,14 +34,14 @@ const pluginInfo = {
             return reject(new Error('Path holds no valid plugin file'));
           }
 
-          global.DEBUG && log.debug('Plugin file is existing, moving on.');
+          log.debug('Plugin file is existing, moving on.');
 
           // Extract version info
 
           // Stream plugin archive contents
           yauzl.open(pluginPath, { lazyEntries: true }, (zipError, zipfile) => {
             if (zipError) {
-              global.DEBUG && log.debug('Error while opening plugin file as zip', zipError);
+              log.debug('Error while opening plugin file as zip', zipError);
               return reject(new Error('Error while reading plugin file. Is it a valid archive?'));
             }
             // Opened successfully, read first file
@@ -52,13 +52,13 @@ const pluginInfo = {
 
                 // Skip directories and other files (not plugin info file)
                 if (/\/$/.test(fileName) || fileName !== 'plugin.yml') {
-                  global.DEBUG && log.debug('-', fileName);
+                  log.debug('-', fileName);
                   // Continue with next file
                   return zipfile.readEntry();
                 }
 
                 // Process plugin.yml
-                global.DEBUG && log.debug('Found plugin.yml in plugin file', pluginPath);
+                log.debug('Found plugin.yml in plugin file', pluginPath);
 
                 return this.readPluginInfoFile(zipfile, entry)
                   .then(result => resolve(result))
@@ -88,7 +88,7 @@ const pluginInfo = {
         }
 
         stream.on('error', (streamError) => {
-          global.DEBUG && log.debug('Stream error while reading plugin.yml file', streamError);
+          log.debug('Stream error while reading plugin.yml file', streamError);
           return reject(streamError);
         });
         stream.on('data', (chunk) => {
@@ -98,14 +98,14 @@ const pluginInfo = {
         stream.on('end', () => {
           const pluginStr = chunks.join('');
           if (pluginStr && pluginStr.length > 0) {
-            global.DEBUG && log.debug('Converted to string', pluginStr);
+            log.debug('Converted to string', pluginStr);
 
             // YAML Parse and resolve
             let pluginJSON;
             try {
               pluginJSON = jsYAML.safeLoad(pluginStr);
             } catch (e) {
-              global.DEBUG && log.debug('Error while parsing YAML', e);
+              log.debug('Error while parsing YAML', e);
               return reject(new Error('Error while parsing plugin.yml file.'));
             }
             return resolve(pluginJSON);
@@ -123,11 +123,11 @@ const pluginInfo = {
    */
   isPluginFile(pluginPath) {
     return new Promise((resolve) => {
-      global.DEBUG && log.debug('isPluginFile', pluginPath);
+      log.debug('isPluginFile', pluginPath);
       // Plugins must have file ending jar
-      global.DEBUG && log.debug('Checking file extension', pluginPath);
+      log.debug('Checking file extension', pluginPath);
       if (path.extname(pluginPath) !== global.pluginFileEnding) {
-        global.DEBUG && log.debug('Invalid plugin file extension');
+        log.debug('Invalid plugin file extension');
         return resolve(false);
       }
       // Extension valid

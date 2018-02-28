@@ -1,15 +1,17 @@
 import chalk from 'chalk';
 import yargs from 'yargs';
+import loglevel from 'loglevel';
 
 import updater from './updater';
 import pluginInfo from './pluginInfo';
 
-global.DEBUG = true;
 // File ending to validate / detect plugin files
 global.pluginFileEnding = '.jar';
 const epilog = 'Created by Paul Zühlcke - pbz.im';
 
-const log = console;
+const log = loglevel;
+// Collect loggers from other components in array
+const loggers = [log, log.getLogger('info'), log.getLogger('update')];
 
 // TODO
 /*
@@ -63,6 +65,10 @@ function runPluginInfo(argv) {
 
 const argv = yargs
   .alias('help', 'h')
+  .option('debug', {
+    describe: 'Print debug messages',
+    type: 'boolean',
+  })
   .epilog(epilog)
   .usage('<update|info>')
   .command('*', '', {}, () => { log.info('No mode selected. Try --help'); })
@@ -74,7 +80,7 @@ const argv = yargs
       })
       .option('ver', {
         describe: 'Only show plugin version',
-        type: Boolean,
+        type: 'boolean',
       })
       .epilog(epilog);
   }, runPluginInfo)
@@ -108,7 +114,7 @@ const argv = yargs
       .option('simulate', {
         default: false,
         describe: 'Only print copy operations, do not execute.',
-        type: Boolean,
+        type: 'boolean',
       })
       .check((a) => {
       // Check if we have at least one of the server and one of the plugin path options
@@ -125,3 +131,10 @@ const argv = yargs
       .epilog(epilog);
   }, runUpdater)
   .argv;
+
+if (argv.debug) {
+  loggers.forEach(logger => logger.setLevel('DEBUG'));
+} else {
+  loggers.forEach(logger => logger.setLevel('INFO'));
+}
+
