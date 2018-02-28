@@ -7,6 +7,7 @@ import pluginInfo from './pluginInfo';
 global.DEBUG = true;
 // File ending to validate / detect plugin files
 global.pluginFileEnding = '.jar';
+const epilog = 'Created by Paul Zühlcke - pbz.im';
 
 const log = console;
 
@@ -43,47 +44,42 @@ function runUpdater(argv) {
 }
 
 function runPluginInfo(argv) {
-
-  let func;
-
-  if(argv.version) {
-    func = pluginInfo.getVersion;
-  } else {
-    func = pluginInfo.getPluginInfo;
-  }
   // Start pluginInfo tool with user args
-  // func(argv.plugin)
   pluginInfo.getPluginInfo(argv.plugin)
     .catch((err) => {
-      log.error('An error occured', err);
+      log.error(chalk.bold.red('An error occured'), err);
     })
-    .then((version) => {
-      log.info(chalk.bold.green('Plugin Info:'), version);
+    .then((info) => {
+      if (argv.ver) {
+        // only show version number
+        log.info(info.version);
+      } else {
+        log.info(log.info(chalk.bold.green('Plugin Info:'), info));
+      }
     });
 }
 
 // Setup app arguments using yargs
 
-// FIXME: no output if no command provided
-// FIXME: Issues with command parameters
-
-const a = yargs
+const argv = yargs
   .alias('help', 'h')
-  .epilog('Created by Paul Zühlcke - pbz.im')
+  .epilog(epilog)
   .usage('<update|info>')
+  .command('*', '', {}, () => { log.info('No mode selected. Try --help'); })
   .command('info <plugin>', 'Show information about a plugin file', (y) => {
-    y.positional('plugin', {
-      describe: 'Path to plugin file to fetch information for.',
-      type: 'string',
-    })
-      .option('version', {
-        alias: 'v',
+    y.usage('pupdater info <plugin> [-v]')
+      .positional('plugin', {
+        describe: 'Path to plugin file to fetch information for.',
+        type: 'string',
+      })
+      .option('ver', {
         describe: 'Only show plugin version',
         type: Boolean,
-      });
+      })
+      .epilog(epilog);
   }, runPluginInfo)
   .command(['update', 'u'], 'Update plugin/s on server/s', (y) => {
-    y.usage('pupdater [-p plugin] [-s server] [-P plugin-dir] [-S server-dir]')
+    y.usage('pupdater update [-p plugin] [-s server] [-P plugin-dir] [-S server-dir]')
       .option('plugin', {
         alias: 'p',
         describe: 'Plugin file',
@@ -125,6 +121,7 @@ const a = yargs
         }
 
         return true;
-      });
-  }, runUpdater).argv;
-
+      })
+      .epilog(epilog);
+  }, runUpdater)
+  .argv;
