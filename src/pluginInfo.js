@@ -1,9 +1,8 @@
-import unzip from 'unzip';
+import yauzl from 'yauzl';
 import jsYAML from 'js-yaml';
 
 import updater from './updater';
 
-const fs = require('fs');
 const path = require('path');
 
 const log = console;
@@ -39,74 +38,80 @@ const pluginInfo = {
 
           // Extract version info
 
-          // FIXME: Infinite loop if zip file is empty file
-          const readStream = fs.createReadStream(pluginPath);
+          // Stream plugin archive contents
+          yauzl.open(pluginPath, { lazyEntries: true }, (zipError, zipfile) => {
+            if (zipError) {
+              global.DEBUG && log.debug('Error while opening plugin file as zip', zipError);
+              return reject(new Error('Error while reading plugin file. Is it a valid archive?'));
+            }
+            // Opened successfully, read first file
+            zipfile.readEntry();
+            zipfile
+              .on('entry', (entry) => {
+                const { fileName } = entry;
 
-          readStream
-            .pipe(unzip.Parse())
-            .on('error', (err) => {
-              global.DEBUG && log.debug('Stream error while reading plugin jar as zip', err);
-              return reject(err);
-            })
-            .on('entry', (entry) => {
-              const fileName = entry.path;
-              const { type } = entry;
-              if (type === 'File' && fileName === 'plugin.yml') {
+                // Skip directories and other files (not plugin info file)
+                if (/\/$/.test(fileName) || fileName !== 'plugin.yml') {
+                  global.DEBUG && log.debug('-', fileName);
+                  // Continue with next file
+                  return zipfile.readEntry();
+                }
+
                 // Process plugin.yml
                 global.DEBUG && log.debug('Found plugin.yml in plugin file', pluginPath);
 
-                this.readPluginInfoFile(entry)
-                  .catch((err) => {
-                    readStream.destroy();
-                    return reject(err);
-                  })
-                  .then((result) => {
-                    readStream.destroy();
-                    return resolve(result);
-                  });
-              }
-              global.DEBUG && log.debug('-', fileName);
-              entry.autodrain(); // If not found
-            })
-            // End of zip search
-            .on('end', () => {
-              reject(new Error('Could not find plugin.yml in plugin-file'));
-            });
+                return this.readPluginInfoFile(zipfile, entry)
+                  .catch(err => reject(err))
+                  .then(result => resolve(result));
+              })
+              // End of zip search
+              .on('end', () => {
+                reject(new Error('Could not find plugin.yml in plugin-file'));
+              });
+          });
         });
     });
   },
   /**
    * Reads plugin.yml from stream and returns parsed JSON representation of the file
-   * @param stream - ReadStream of plugin.yml
    * @returns {Promise<Object>} - parsed JSON representation of plugin.yml
+   * @param {Object} zipfile - Object representing plugin archive
+   * @param {Object} entry - Object representing plugin.yml in plugin archive
    */
-  readPluginInfoFile(stream) {
+  readPluginInfoFile(zipfile, entry) {
     return new Promise((resolve, reject) => {
       const chunks = []; // Used to collect file chunks as they are read
 
-      stream.on('error', (err) => {
-        global.DEBUG && log.debug('Stream error while reading plugin.yml file', err);
-        return reject(err);
-      });
-      stream.on('data', (chunk) => {
-        chunks.push(chunk.toString());
-      });
-      // End of plugin.yml read
-      stream.on('end', () => {
-        const pluginStr = chunks.join('');
-        if (pluginStr && pluginStr.length > 0) {
-          global.DEBUG && log.debug('Converted to string', pluginStr);
-
-          // YAML Parse and resolve
-          let pluginJSON;
-          try {
-            pluginJSON = jsYAML.safeLoad(pluginStr);
-          } catch (err) {
-            return reject(err);
-          }
-          return resolve(pluginJSON);
+      zipfile.openReadStream(entry, (err, stream) => {
+        if (err) {
+          return reject(err);
         }
-        return reject(new Error('Plugin contains invalid plugin.yml file!'));
+
+        stream.on('error', (streamError) => {
+          global.DEBUG && log.debug('Stream error while reading plugin.yml file', streamError);
+          return reject(streamError);
+        });
+        stream.on('data', (chunk) => {
+          chunks.push(chunk.toString());
+        });
+        // End of plugin.yml read
+        stream.on('end', () => {
+          const pluginStr = chunks.join('');
+          if (pluginStr && pluginStr.length > 0) {
+            global.DEBUG && log.debug('Converted to string', pluginStr);
+
+            // YAML Parse and resolve
+            let pluginJSON;
+            try {
+              pluginJSON = jsYAML.safeLoad(pluginStr);
+            } catch (e) {
+              global.DEBUG && log.debug('Error while parsing YAML', e);
+              return reject(new Error('Error while parsing plugin.yml file.'));
+            }
+            return resolve(pluginJSON);
+          }
+          return reject(new Error('Plugin contains invalid plugin.yml file!'));
+        });
       });
     });
   },
@@ -127,7 +132,7 @@ const pluginInfo = {
       }
       // Extension valid
       // Does the plugin file exist?
-      updater.pathExists(pluginPath).then(resolve);
+      return updater.pathExists(pluginPath).then(resolve);
     });
   },
 };
