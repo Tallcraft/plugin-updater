@@ -103,7 +103,7 @@ const pluginInfo = {
         }
         return reject(new Error('Plugin contains invalid plugin.yml file!'));
       });
-    });
+    }),
   },
   /**
    * Checks if a given path holds a plugin file
