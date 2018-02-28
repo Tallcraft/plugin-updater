@@ -40,10 +40,6 @@ export default {
       }
 
       Promise.all(pathTasks)
-        .catch((error) => {
-          log.error(error);
-          return reject(new Error('Error while processing server / plugin path'));
-        })
         .then(([s, p]) => {
           global.DEBUG && log.debug('Returned servers, plugins', s, p);
           let servers = s;
@@ -92,6 +88,10 @@ export default {
           // Once all update operations are done resolve
           return Promise.all(updatePromises)
             .then(resolve);
+        })
+        .catch((error) => {
+          log.error(error);
+          return reject(new Error('Error while processing server / plugin path'));
         });
     });
   },

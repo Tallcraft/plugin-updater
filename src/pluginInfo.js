@@ -17,8 +17,8 @@ const pluginInfo = {
   getVersion(pluginPath) {
     return new Promise((resolve, reject) => {
       this.getPluginInfo(pluginPath)
-        .catch(() => reject)
-        .then(info => resolve(info.version));
+        .then(info => resolve(info.version))
+        .catch(() => reject);
     });
   },
   /**
@@ -61,8 +61,8 @@ const pluginInfo = {
                 global.DEBUG && log.debug('Found plugin.yml in plugin file', pluginPath);
 
                 return this.readPluginInfoFile(zipfile, entry)
-                  .catch(err => reject(err))
-                  .then(result => resolve(result));
+                  .then(result => resolve(result))
+                  .catch(err => reject(err));
               })
               // End of zip search
               .on('end', () => {
