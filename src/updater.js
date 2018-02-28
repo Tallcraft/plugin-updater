@@ -1,11 +1,9 @@
 import chalk from 'chalk';
+import pluginInfo from './pluginInfo';
 
 const log = console;
 const fs = require('fs');
 const path = require('path');
-
-// File ending to validate / detect plugin files
-const pluginFileEnding = '.jar';
 
 
 export default {
@@ -207,7 +205,7 @@ export default {
             });
         } else if (mode === 'plugin' && stat.isFile()) {
           global.DEBUG && log.debug('Is file', p);
-          this.isPluginFile(p)
+          pluginInfo.isPluginFile(p)
             .then((isPlugin) => {
               if (isPlugin) {
                 // resolve with valid plugin path
@@ -233,8 +231,8 @@ export default {
    */
   pluginInstalled(serverPath, pluginName) {
     global.DEBUG && log.debug('pluginInstalled', pluginName, serverPath);
-    const pluginFile = pluginName.endsWith(pluginFileEnding)
-      ? pluginName : `pluginName${pluginFileEnding}`;
+    const pluginFile = pluginName.endsWith(global.pluginFileEnding)
+      ? pluginName : `pluginName${global.pluginFileEnding}`;
     return this.pathExists(serverPath, 'plugins', pluginFile);
   },
   /**
@@ -248,33 +246,13 @@ export default {
     return this.pathExists(serverPath, 'plugins');
   },
   /**
-   * Checks if a given path holds a plugin file
-   * @param {String} pluginPath
-   * @async
-   * @returns {Promise<Boolean>} true if file is plugin and exists, false otherwise
-   */
-  isPluginFile(pluginPath) {
-    global.DEBUG && log.debug('isPluginFile', pluginPath);
-    return new Promise((resolve) => {
-      // Plugins must have file ending jar
-      global.DEBUG && log.debug('Checking file extension', pluginPath);
-      if (path.extname(pluginPath) !== pluginFileEnding) {
-        global.DEBUG && log.debug('Invalid plugin file extension');
-        return resolve(false);
-      }
-      // Extension valid
-      // Does the plugin file exist?
-      return this.pathExists(pluginPath).then(resolve);
-    });
-  },
-  /**
    * Check if a given directory / file exists
    * @param {String} p - Path
    * @returns {Promise<any>} true if directory / file exists, false otherwise
    */
   pathExists(...p) {
-    global.DEBUG && log.debug('pathExists', p);
     return new Promise((resolve) => {
+      global.DEBUG && log.debug('pathExists', p);
       const cleanDir = path.join(...p);
       global.DEBUG && log.debug('Checking dir', cleanDir);
       fs.access(cleanDir, fs.constants.F_OK, err => resolve(!(err && err.code === 'ENOENT')));
