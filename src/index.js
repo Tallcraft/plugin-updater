@@ -5,6 +5,9 @@ import updater from './updater';
 import pluginInfo from './pluginInfo';
 
 global.DEBUG = true;
+// File ending to validate / detect plugin files
+global.pluginFileEnding = '.jar';
+
 const log = console;
 
 // TODO
@@ -49,7 +52,8 @@ function runPluginInfo(argv) {
     func = pluginInfo.getPluginInfo;
   }
   // Start pluginInfo tool with user args
-  func(argv.plugin)
+  // func(argv.plugin)
+  pluginInfo.getPluginInfo(argv.plugin)
     .catch((err) => {
       log.error('An error occured', err);
     })
