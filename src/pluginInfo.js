@@ -35,7 +35,7 @@ const pluginInfo = {
             return reject(new Error('Path holds no valid plugin file'));
           }
 
-          global.DEBUG && log.debug('Plugin file is valid, moving on.');
+          global.DEBUG && log.debug('Plugin file is existing, moving on.');
 
           // Extract version info
 
@@ -75,6 +75,11 @@ const pluginInfo = {
         });
     });
   },
+  /**
+   * Reads plugin.yml from stream and returns parsed JSON representation of the file
+   * @param stream - ReadStream of plugin.yml
+   * @returns {Promise<Object>} - parsed JSON representation of plugin.yml
+   */
   readPluginInfoFile(stream) {
     return new Promise((resolve, reject) => {
       const chunks = []; // Used to collect file chunks as they are read
