@@ -116,6 +116,7 @@ export default {
       this.pluginInstalled(serverPath, pluginFileName)
         .then((isInstalled) => {
           if (!isInstalled) {
+            log.info(chalk.yellow(`Not installed: Skipping ${pluginFileName} for server ${path.basename(serverPath)}.`));
             global.DEBUG && log.debug('Plugin is not installed. Abort');
             return resolve();
           }
