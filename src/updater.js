@@ -137,6 +137,7 @@ export default {
           fs.copyFile(src, dst, undefined, (err) => {
             if (err) {
               log.error('Error while copying file', src, dst, err);
+              return resolve();
             }
             log.info(chalk.italic.yellow(copyMsg));
             return resolve();

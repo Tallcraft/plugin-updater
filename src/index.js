@@ -63,6 +63,7 @@ function runPluginInfo(argv) {
 
 // Setup app arguments using yargs
 
+// eslint-disable-next-line prefer-destructuring
 const argv = yargs
   .alias('help', 'h')
   .option('debug', {
