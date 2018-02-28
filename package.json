@@ -7,7 +7,7 @@
     "start": "node build/index.js",
     "prestart": "script/build",
     "build": "script/build",
-    "build-dist": "script/build && pkg build/index.js --output 'dist/pupdate'"
+    "build-dist": "script/build && pkg build/index.js --public --output 'dist/pupdate'"
   },
   "author": "Paul Zühlcke",
   "license": "MIT",
