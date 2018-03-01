@@ -79,6 +79,8 @@ export default {
           log.info(chalk.blue.bold('Plugins'));
           this.printList(plugins);
 
+          // TODO: Get source plugins version information so we can use them later
+
           const updatePromises = [];
 
           log.info(chalk.yellow.bold('Update'));
@@ -153,7 +155,7 @@ export default {
           });
         })
         .catch((error) => {
-          log.info(`Skipping plugin '${pluginFileName}' for server '${serverName}':`, error.message);
+          log.info(chalk.yellow(`Skipping plugin ${chalk.bold.yellow(pluginFileName)} for server ${chalk.bold.yellow(serverName)}:`), error.message);
           log.trace(error);
           return resolve();
         });
@@ -167,6 +169,8 @@ export default {
 
       // Retrieve plugin.yml as json for installed version and plugin update file
       Promise.all([
+        // TODO: Do not get plugin for pluginSource every time.
+        // Should only fetch this once when we discovered paths
         pluginInfo.getPluginInfo(serverPluginPath),
         pluginInfo.getPluginInfo(pluginSourcePath)])
         .then(([installed, update]) => {

@@ -145,9 +145,7 @@ const pluginInfo = {
   comparePluginFileVersion(a, b) {
     return new Promise((resolve, reject) => {
       Promise.all([this.getVersion(a), this.getVersion(b)])
-        .then(([verA, verB]) => {
-          return resolve(this.comparePluginStrVersion(verA, verB), verA, verB);
-        })
+        .then(([verA, verB]) => resolve(this.comparePluginStrVersion(verA, verB), verA, verB))
         .catch(reject);
     });
   },
