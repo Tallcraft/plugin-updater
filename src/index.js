@@ -39,7 +39,8 @@ function runUpdater(argv) {
     })
     .catch((error) => {
       log.error(chalk.bold.red('Updater finished with errors.'));
-      log.error(chalk.red(error));
+      log.error(chalk.red(error.message));
+      log.trace(error);
     });
 }
 
@@ -55,7 +56,8 @@ function runPluginInfo(argv) {
       }
     })
     .catch((err) => {
-      log.error(chalk.bold.red('An error occured'), err);
+      log.error(chalk.bold.red('An error occured'), err.message);
+      log.trace(err);
     });
 }
 
