@@ -15,6 +15,7 @@ export default {
    */
   run(argv) {
     return new Promise((resolve, reject) => {
+      // FIXME: Log level still info at this point when debug flag is provided. Issues with async?
       log.debug('Running updater with args', argv);
 
       if (argv.simulate) {
@@ -83,7 +84,12 @@ export default {
           log.info(chalk.yellow.bold('Update'));
           plugins.forEach((pluginPath) => {
             servers.forEach((serverPath) => {
-              updatePromises.push(this.updatePlugin(serverPath, pluginPath, argv.simulate));
+              updatePromises.push(this.updatePlugin(
+                serverPath,
+                pluginPath,
+                argv.simulate,
+                argv.skipChecks,
+              ));
             });
           });
 
@@ -107,16 +113,24 @@ export default {
    * @param {String} serverPath - Path to server folder
    * @param {String} pluginPath - Path to plugin file
    * @param {Boolean} simulate - Only print copy operations, do not run
+   * @param {Boolean} skipChecks - Skip any pre-update checks and copy plugin file to update folder.
    * @returns {Promise} - Resolves when operation has finished
    */
-  updatePlugin(serverPath, pluginPath, simulate = false) {
+  updatePlugin(serverPath, pluginPath, simulate = false, skipChecks = false) {
     return new Promise((resolve) => {
       log.debug('updatePlugin', serverPath, pluginPath, simulate);
 
       const pluginFileName = path.basename(pluginPath);
       const serverName = path.basename(serverPath);
+      let checksPassed;
 
-      this.preUpdateChecks(serverPath, pluginPath)
+      if (skipChecks) {
+        checksPassed = Promise.resolve();
+      } else {
+        checksPassed = this.preUpdateChecks(serverPath, pluginPath);
+      }
+
+      checksPassed
         .then(() => {
           // Passed preUpdateChecks
           // Copy file

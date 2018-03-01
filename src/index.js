@@ -15,13 +15,11 @@ const loggers = [log, log.getLogger('info'), log.getLogger('update')];
 
 // TODO
 /*
-  Create Update folder if it doesnt exist
-  Improve error handling
+  Create Update folder if it doesn't exist
   Code Cleanup
-  TODO: Show plugin versions while updating, compare plugin versions
+  TODO: Show plugin versions while updating
 
   Nice to have
-    Extract version information from plugins and warn / abort if plugin is newer / up to date
     Flag for resetting plugin config folder and / or config.yml
     Strip build numbers and other metadata in plugin file name.
       E.g. EssentialsX-3.4.5.jar => EssentialsX.jar
@@ -117,6 +115,12 @@ const argv = yargs
         describe: 'Only print copy operations, do not execute.',
         type: 'boolean',
       })
+      .option('skip-checks', {
+        default: false,
+        describe: 'Force plugin update. Skips sanity checks such as version comparison' +
+        'and installed check.',
+        type: 'boolean',
+      })
       .check((a) => {
       // Check if we have at least one of the server and one of the plugin path options
         if (!(a.server || a.serverDir)) {
@@ -138,4 +142,5 @@ if (argv.debug) {
 } else {
   loggers.forEach(logger => logger.setLevel('INFO'));
 }
+log.debug('Set log levels');
 
