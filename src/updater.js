@@ -153,7 +153,8 @@ export default {
           });
         })
         .catch((error) => {
-          log.info(`Skipping plugin '${pluginFileName}' for server '${serverName}':`, error);
+          log.info(`Skipping plugin '${pluginFileName}' for server '${serverName}':`, error.message);
+          log.trace(error);
           return resolve();
         });
     });
