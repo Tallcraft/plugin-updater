@@ -1,6 +1,7 @@
 import yauzl from 'yauzl';
 import jsYAML from 'js-yaml';
 import loglevel from 'loglevel';
+import semver from 'semver';
 
 import updater from './updater';
 
@@ -18,7 +19,7 @@ const pluginInfo = {
     return new Promise((resolve, reject) => {
       this.getPluginInfo(pluginPath)
         .then(info => resolve(info.version))
-        .catch(() => reject);
+        .catch(reject);
     });
   },
   /**
@@ -134,6 +135,34 @@ const pluginInfo = {
       // Does the plugin file exist?
       return updater.pathExists(pluginPath).then(resolve);
     });
+  },
+  /**
+   * Compare two plugins by version number (from plugin.yml)
+   * @param {String} a - Path to plugin file A
+   * @param {String} b - Path to plugin file B
+   * @returns {Promise<Number>} 0 if same version, -1 if b is newer, 1 if a is newer
+   */
+  comparePluginFileVersion(a, b) {
+    return new Promise((resolve, reject) => {
+      Promise.all([this.getVersion(a), this.getVersion(b)])
+        .then(([verA, verB]) => {
+          return resolve(this.comparePluginStrVersion(verA, verB), verA, verB);
+        })
+        .catch(reject);
+    });
+  },
+  /**
+   * Compare two plugins by version number (from plugin.yml)
+   * @param {String} a - Version string of plugin A
+   * @param {String} b -  Version string of plugin B
+   * @returns {Promise<Number>} 0 if same version, -1 if b is newer, 1 if a is newer
+   */
+  comparePluginStrVersion(a, b) {
+    if (!semver.valid(a) || !semver.valid(b)) {
+      log.debug('Invalid version string', a, b);
+      throw new Error('Invalid version string');
+    }
+    return semver.compare(a, b);
   },
 };
 

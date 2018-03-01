@@ -114,16 +114,11 @@ export default {
       log.debug('updatePlugin', serverPath, pluginPath, simulate);
 
       const pluginFileName = path.basename(pluginPath);
+      const serverName = path.basename(serverPath);
 
-      this.pluginInstalled(serverPath, pluginFileName)
-        .then((isInstalled) => {
-          if (!isInstalled) {
-            log.info(chalk.yellow(`Not installed: Skipping ${pluginFileName} for server ${path.basename(serverPath)}.`));
-            log.debug('Plugin is not installed. Abort');
-            return resolve();
-          }
-          log.debug('Plugin is installed. Update');
-
+      this.preUpdateChecks(serverPath, pluginPath)
+        .then(() => {
+          // Passed preUpdateChecks
           // Copy file
 
           const src = pluginPath;
@@ -142,7 +137,46 @@ export default {
             log.info(chalk.italic.yellow(copyMsg));
             return resolve();
           });
+        })
+        .catch((error) => {
+          log.info(`Skipping plugin '${pluginFileName}' for server '${serverName}':`, error);
+          return resolve();
         });
+    });
+  },
+  preUpdateChecks(serverPath, pluginSourcePath) {
+    return new Promise((resolve, reject) => {
+      const pluginFileName = path.basename(pluginSourcePath);
+      const serverPluginPath = path.join(serverPath, 'plugins', pluginFileName);
+
+
+      // Retrieve plugin.yml as json for installed version and plugin update file
+      Promise.all([
+        pluginInfo.getPluginInfo(serverPluginPath),
+        pluginInfo.getPluginInfo(pluginSourcePath)])
+        .then(([installed, update]) => {
+          // Check if plugin name in plugin.yml matches (ignore case)
+          if (installed.name.toLowerCase() !== update.name.toLowerCase()) {
+            return reject(new Error(`File names match, but plugin names do not. Installed: ${installed.name}; Update: ${update.name}`));
+          }
+
+          // Compare version numbers of the plugin installed on the server and the update file
+          const cmpResult = pluginInfo.comparePluginStrVersion(installed.version, update.version);
+
+          // Same version
+          if (cmpResult === 0) {
+            return reject(new Error('Plugin version already installed'));
+          }
+
+          // Server already has a newer version of the plugin installed
+          if (cmpResult === 1) {
+            return reject(new Error(`Newer plugin version installed. Installed ${verInstalled}; Update: ${verUpdate}`));
+          }
+
+          // All checks passed
+          return resolve();
+        })
+        .catch(reject);
     });
   },
   /**
