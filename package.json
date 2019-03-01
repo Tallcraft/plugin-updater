@@ -20,7 +20,7 @@
     "pkg": "^4.3.0"
   },
   "dependencies": {
-    "chalk": "^2.3.1",
+    "chalk": "^2.4.2",
     "js-yaml": "^3.10.0",
     "loglevel": "^1.6.1",
     "semver": "^5.5.0",
